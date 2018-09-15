@@ -1,0 +1,20 @@
+#!/usr/bin/env python
+import sys
+import argparse
+from niq.util import sort_file_names
+
+def main():
+    parser = argparse.ArgumentParser(
+            description='Command line util for common tasks')
+    parser.add_argument(
+            '--pad-zeros', '-p', nargs=1, dest='SOURCE_DIR', help='Copy all files in SOURCE_DIR to a new directory with the same name as SOURCE_DIR appended with "_sorted" under new names by padding the numeric part of the name with zeros')
+    if len(sys.argv)==1:
+        parser.print_help(sys.stderr)
+        sys.exit(1)
+    args = parser.parse_args()
+    if args.SOURCE_DIR:
+        src_dir = args.SOURCE_DIR[0]
+        sort_file_names(src_dir)
+
+if __name__ == '__main__':
+    main()
