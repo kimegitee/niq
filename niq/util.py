@@ -3,7 +3,7 @@ import sys
 import json
 import shutil
 import pickle
-import hashlib
+import xxhash
 from glob import glob
 from functools import wraps
 
@@ -34,9 +34,10 @@ def memoize(func):
     '''Cache result of function call on disk
     Supports single argument function only'''
 
-    def identify(text):
-        '''Return an md5 hex digest of the input str'''
-        return hashlib.md5(text.encode('utf-8')).hexdigest()
+    def identify(x):
+        '''Return an hex digest of the input'''
+        x = x if isinstance(x, str) else x.tostring() # Hashing numpy array
+        return xxhash.xxh64(x, seed=0).hexdigest()
 
     @wraps(func)
     def memoized_func(arg):
@@ -47,14 +48,20 @@ def memoize(func):
             arg_id = identify(arg)
             cache_path = os.path.join(cache_dir, func_id + arg_id + '.pkl')
             if os.path.exists(cache_path):
+                print('DEBUG ENV is set, using cache\n'
+                     f'function :: {func.__name__}\n'
+                     f'argument :: {arg}\n'
+                     f'type     :: {type(arg)}')
                 return pickle.load(open(cache_path, 'rb'))
             else:
+                print('Not using cache')
                 result = func(arg)
                 if not os.path.exists(cache_dir):
                     os.mkdir(cache_dir)
                 pickle.dump(result, open(cache_path, 'wb'))
                 return result
-        except (KeyError, AttributeError):
+        except (KeyError, AttributeError, TypeError):
+            print('Not using cache')
             return func(arg)
 
     return memoized_func
