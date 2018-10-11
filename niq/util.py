@@ -32,36 +32,42 @@ def sort_file_names(src_dir):
 
 def memoize(func):
     '''Cache result of function call on disk
-    Supports single argument function only'''
+    Support multiple positional and keyword arguments'''
+
+    def print_status(status, func, args, kwargs):
+        print(f'{status}\n'
+              f'func   :: {func.__name__}\n'
+              f'args   :: \n'
+              f'{args}\n'
+              f'kwargs :: \n'
+              f'{kwargs}')
 
     def identify(x):
         '''Return an hex digest of the input'''
-        x = x if isinstance(x, str) else x.tostring() # Hashing numpy array
-        return xxhash.xxh64(x, seed=0).hexdigest()
+        return xxhash.xxh64(pickle.dumps(x), seed=0).hexdigest()
 
     @wraps(func)
-    def memoized_func(arg):
+    def memoized_func(*args, **kwargs):
         cache_dir = 'cache'
         try:
             os.environ['DEBUG']
-            func_id = identify(func.__name__)
-            arg_id = identify(arg)
-            cache_path = os.path.join(cache_dir, func_id + arg_id + '.pkl')
+            print('Environment variable DEBUG is set, will use cache when possible')
+            func_id = identify((func.__name__, args, kwargs))
+            cache_path = os.path.join(cache_dir, func_id)
             if os.path.exists(cache_path):
-                print('DEBUG ENV is set, using cache\n'
-                     f'function :: {func.__name__}\n'
-                     f'argument :: {arg}\n'
-                     f'type     :: {type(arg)}')
+                print_status('Using cache', func, args, kwargs)
                 return pickle.load(open(cache_path, 'rb'))
             else:
-                print('Not using cache')
-                result = func(arg)
+                print_status('Not using cache', func, args, kwargs)
+                result = func(*args, **kwargs)
                 if not os.path.exists(cache_dir):
                     os.mkdir(cache_dir)
                 pickle.dump(result, open(cache_path, 'wb'))
                 return result
         except (KeyError, AttributeError, TypeError):
-            print('Not using cache')
-            return func(arg)
+            print_status('DEBUG env is not set, '
+                         'or function is not cacheable, '
+                         'running afresh', func, args, kwargs)
+            return func(*args, **kwargs)
 
     return memoized_func
