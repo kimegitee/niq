@@ -51,10 +51,13 @@ def memoize(func):
         cache_dir = 'cache'
         try:
             os.environ['DEBUG']
-            print('Environment variable DEBUG is set, will use cache when possible')
+            print('Environment variable DEBUG is set, will use cache when possible\n'
+                  'To invalidate cache, add the function name as an environment variable')
             func_id = identify((func.__name__, args, kwargs))
             cache_path = os.path.join(cache_dir, func_id)
-            if os.path.exists(cache_path) and not 'BUST_CACHE' in os.environ:
+            if (os.path.exists(cache_path) 
+                    and not func.__name__ in os.environ
+                    and not 'BUST_CACHE' in os.environ):
                 print_status('Using cached result', func, args, kwargs)
                 return pickle.load(open(cache_path, 'rb'))
             else:
