@@ -54,20 +54,18 @@ def memoize(func):
             print('Environment variable DEBUG is set, will use cache when possible')
             func_id = identify((func.__name__, args, kwargs))
             cache_path = os.path.join(cache_dir, func_id)
-            if os.path.exists(cache_path):
-                print_status('Using cache', func, args, kwargs)
+            if os.path.exists(cache_path) and not 'BUST_CACHE' in os.environ:
+                print_status('Using cached result', func, args, kwargs)
                 return pickle.load(open(cache_path, 'rb'))
             else:
-                print_status('Not using cache', func, args, kwargs)
+                print_status('Updating cache with fresh run', func, args, kwargs)
                 result = func(*args, **kwargs)
                 if not os.path.exists(cache_dir):
                     os.mkdir(cache_dir)
                 pickle.dump(result, open(cache_path, 'wb'))
                 return result
         except (KeyError, AttributeError, TypeError):
-            print_status('DEBUG env is not set, '
-                         'or function is not cacheable, '
-                         'running afresh', func, args, kwargs)
+            print_status('Not using or updating cache ', func, args, kwargs)
             return func(*args, **kwargs)
 
     return memoized_func
