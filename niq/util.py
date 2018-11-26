@@ -5,6 +5,7 @@ import shutil
 import pickle
 import xxhash
 from glob import glob
+from time import time
 from functools import wraps
 
 def sort_file_names(src_dir):
@@ -72,3 +73,16 @@ def memoize(func):
             return func(*args, **kwargs)
 
     return memoized_func
+
+def howlong(func):
+    '''Decorator to print a function's execution time'''
+
+    @wraps(func)
+    def timed_func(*args, **kwargs):
+        start_time = time()
+        result = func(*args, **kwargs)
+        stop_time = time()
+        print(f'Calling {func.__name__} took {stop_time - start_time}')
+        return result
+
+    return timed_func
