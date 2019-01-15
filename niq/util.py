@@ -8,6 +8,7 @@ from glob import glob
 from time import time
 from functools import wraps
 
+
 def sort_file_names(src_dir):
     dst_dir = src_dir.strip('/') + '_sorted'
     if not os.path.exists(dst_dir):
@@ -26,7 +27,10 @@ def sort_file_names(src_dir):
         dst_path = os.path.join(dst_dir, dst_path)
         src_to_dst_dict[src_path] = dst_path
         shutil.copy(src_path, dst_path)
-    src_to_dst_dict = {os.path.basename(k):os.path.basename(v) for k, v in src_to_dst_dict.items()}
+    src_to_dst_dict = {
+        os.path.basename(k): os.path.basename(v)
+        for k, v in src_to_dst_dict.items()
+    }
     json_path = src_dir.strip('/') + '_map.json'
     json.dump(src_to_dst_dict, open(json_path, 'w'), indent=4, sort_keys=True)
 
@@ -52,17 +56,20 @@ def memoize(func):
         cache_dir = 'cache'
         try:
             os.environ['DEBUG']
-            print('Environment variable DEBUG is set, will use cache when possible\n'
-                  'To invalidate cache, add the function name as an environment variable')
+            print(
+                'Environment variable DEBUG is set, will use cache when possible\n'
+                'To invalidate cache, add the function name as an environment variable'
+            )
             func_id = identify((func.__name__, args, kwargs))
             cache_path = os.path.join(cache_dir, func_id)
-            if (os.path.exists(cache_path) 
-                    and not func.__name__ in os.environ
-                    and not 'BUST_CACHE' in os.environ):
+            if (os.path.exists(cache_path) and
+                    not func.__name__ in os.environ and
+                    not 'BUST_CACHE' in os.environ):
                 print_status('Using cached result', func, args, kwargs)
                 return pickle.load(open(cache_path, 'rb'))
             else:
-                print_status('Updating cache with fresh run', func, args, kwargs)
+                print_status('Updating cache with fresh run', func, args,
+                             kwargs)
                 result = func(*args, **kwargs)
                 if not os.path.exists(cache_dir):
                     os.mkdir(cache_dir)
