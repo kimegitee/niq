@@ -74,15 +74,19 @@ def memoize(func):
 
     return memoized_func
 
+
 def howlong(func):
-    '''Decorator to print a function's execution time'''
+    '''Decorator to print a function's execution time
+
+    Time taken for the most recent call to the decorated function can be accessed via the `last_run` attribute'''
 
     @wraps(func)
     def timed_func(*args, **kwargs):
         start_time = time()
         result = func(*args, **kwargs)
         stop_time = time()
-        print(f'Calling {func.__name__} took {stop_time - start_time}')
+        timed_func.last_run = stop_time - start_time
+        print(f'Calling {func.__name__} took {timed_func.last_run}')
         return result
 
     return timed_func
