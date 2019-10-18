@@ -8,7 +8,7 @@ import xxhash
 from glob import glob
 from time import time
 from pathlib import Path
-from functools import wraps
+from functools import partial, wraps
 
 
 def sort_file_names(src_dir):
@@ -37,9 +37,11 @@ def sort_file_names(src_dir):
     json.dump(src_to_dst_dict, open(json_path, 'w'), indent=4, sort_keys=True)
 
 
-def cache(func):
+def cache(func=None, cache_dir=Path.home()/'.niq'):
     '''Cache result of function call on disk
     Support multiple positional and keyword arguments'''
+    if func is None:
+        return partial(cache, cache_dir=cache_dir)
 
     def print_status(status, func, args, kwargs):
         print(f'{status}\n'
@@ -55,7 +57,6 @@ def cache(func):
 
     @wraps(func)
     def memoized_func(*args, **kwargs):
-        cache_dir = str(Path.home()/'.niq')
         if os.environ.get('NIQ_CACHE', '0') == '1':
             func_id = identify((func.__name__, args, kwargs))
             cache_path = os.path.join(cache_dir, func_id)
