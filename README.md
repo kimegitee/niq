@@ -2,17 +2,17 @@
 
 ## Installation
 ```bash
-pip install https://github.com/kimegitee/niq/archive/master.zip
+pip install 'niq@git+ssh://git@github.com/Cinnamon/niq.git@v1.0.0'
 ```
 ## Usage
 
 ```python
-from niq.util import memoize
+from niq import cache
 
-@memoize
-def some_func():
+@cache
+def f():
     pass
 ```
-The memoize decorator saves the function result in ~/project_root/cache and loads it if environment varible DEBUG is set to any value.
+The memoize decorator saves the function result in ~/.niq and loads it if environment variable NIQ_CACHE is set to 1.
 
 Supports multi-arity functions.

@@ -3,9 +3,11 @@ import sys
 import json
 import shutil
 import pickle
+import joblib
 import xxhash
 from glob import glob
 from time import time
+from pathlib import Path
 from functools import wraps
 
 
@@ -35,7 +37,7 @@ def sort_file_names(src_dir):
     json.dump(src_to_dst_dict, open(json_path, 'w'), indent=4, sort_keys=True)
 
 
-def memoize(func):
+def cache(func):
     '''Cache result of function call on disk
     Support multiple positional and keyword arguments'''
 
@@ -53,29 +55,22 @@ def memoize(func):
 
     @wraps(func)
     def memoized_func(*args, **kwargs):
-        cache_dir = 'cache'
-        try:
-            os.environ['DEBUG']
-            print(
-                'Environment variable DEBUG is set, will use cache when possible\n'
-                'To invalidate cache, add the function name as an environment variable'
-            )
+        cache_dir = str(Path.home()/'.niq')
+        if os.environ.get('NIQ_CACHE', '0') == '1':
             func_id = identify((func.__name__, args, kwargs))
             cache_path = os.path.join(cache_dir, func_id)
-            if (os.path.exists(cache_path) and
-                    not func.__name__ in os.environ and
-                    not 'BUST_CACHE' in os.environ):
+            if os.path.exists(cache_path) and not func.__name__ in os.environ:
                 print_status('Using cached result', func, args, kwargs)
-                return pickle.load(open(cache_path, 'rb'))
+                return joblib.load(open(cache_path, 'rb'))
             else:
                 print_status('Updating cache with fresh run', func, args,
                              kwargs)
                 result = func(*args, **kwargs)
                 if not os.path.exists(cache_dir):
                     os.mkdir(cache_dir)
-                pickle.dump(result, open(cache_path, 'wb'))
+                joblib.dump(result, open(cache_path, 'wb'))
                 return result
-        except (KeyError, AttributeError, TypeError):
+        else:
             print_status('Not using or updating cache ', func, args, kwargs)
             return func(*args, **kwargs)
 
