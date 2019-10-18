@@ -30,26 +30,27 @@ def sort_file_names(src_dir):
         src_to_dst_dict[src_path] = dst_path
         shutil.copy(src_path, dst_path)
     src_to_dst_dict = {
-        os.path.basename(k): os.path.basename(v)
-        for k, v in src_to_dst_dict.items()
+        os.path.basename(k): os.path.basename(v) for k, v in src_to_dst_dict.items()
     }
     json_path = src_dir.strip('/') + '_map.json'
     json.dump(src_to_dst_dict, open(json_path, 'w'), indent=4, sort_keys=True)
 
 
-def cache(func=None, cache_dir=Path.home()/'.niq'):
+def cache(func=None, cache_dir=Path.home() / '.niq'):
     '''Cache result of function call on disk
     Support multiple positional and keyword arguments'''
     if func is None:
         return partial(cache, cache_dir=cache_dir)
 
     def print_status(status, func, args, kwargs):
-        print(f'{status}\n'
-              f'func   :: {func.__name__}\n'
-              f'args   :: \n'
-              f'{args}\n'
-              f'kwargs :: \n'
-              f'{kwargs}')
+        print(
+            f'{status}\n'
+            f'func   :: {func.__name__}\n'
+            f'args   :: \n'
+            f'{args}\n'
+            f'kwargs :: \n'
+            f'{kwargs}'
+        )
 
     def identify(x):
         '''Return an hex digest of the input'''
@@ -64,8 +65,7 @@ def cache(func=None, cache_dir=Path.home()/'.niq'):
                 print_status('Using cached result', func, args, kwargs)
                 return joblib.load(open(cache_path, 'rb'))
             else:
-                print_status('Updating cache with fresh run', func, args,
-                             kwargs)
+                print_status('Updating cache with fresh run', func, args, kwargs)
                 result = func(*args, **kwargs)
                 if not os.path.exists(cache_dir):
                     os.mkdir(cache_dir)
