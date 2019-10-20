@@ -5,7 +5,7 @@ Available utilities:
 
 ## Installation
 ```bash
-pip install 'niq@git+ssh://git@github.com/Cinnamon/niq.git@v1.0.0'
+pip install 'niq@git+ssh://git@github.com/Cinnamon/niq.git@master'
 ```
 ## Usage
 
