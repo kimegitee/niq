@@ -5,6 +5,8 @@ import shutil
 import pickle
 import joblib
 import xxhash
+import inspect
+import logging
 from glob import glob
 from time import time
 from pathlib import Path
@@ -43,7 +45,7 @@ def cache(func=None, cache_dir=Path.home() / '.niq'):
         return partial(cache, cache_dir=cache_dir)
 
     def print_status(status, func, args, kwargs):
-        print(
+        logging.info(
             f'{status}\n'
             f'func   :: {func.__name__}\n'
             f'args   :: \n'
@@ -52,14 +54,11 @@ def cache(func=None, cache_dir=Path.home() / '.niq'):
             f'{kwargs}'
         )
 
-    def identify(x):
-        '''Return an hex digest of the input'''
-        return xxhash.xxh64(pickle.dumps(x), seed=0).hexdigest()
 
     @wraps(func)
     def memoized_func(*args, **kwargs):
         if os.environ.get('NIQ_CACHE', '0') == '1':
-            func_id = identify((func.__name__, args, kwargs))
+            func_id = identify_func(func, args, kwargs)
             cache_path = os.path.join(cache_dir, func_id)
             if os.path.exists(cache_path) and not func.__name__ in os.environ:
                 print_status('Using cached result', func, args, kwargs)
@@ -93,3 +92,13 @@ def howlong(func):
         return result
 
     return timed_func
+
+def identify(x):
+    '''Return an hex digest of the input'''
+    return xxhash.xxh64(pickle.dumps(x), seed=0).hexdigest()
+
+def identify_func(func, args, kwargs):
+    # Quick hack for unbound method case
+    if args and (inspect.ismethod(func) or getattr(args[0], func.__name__, None)):
+        args = args[1:]
+    return identify((func.__name__, args, kwargs))

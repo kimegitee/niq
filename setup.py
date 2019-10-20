@@ -2,7 +2,7 @@ from setuptools import setup
 
 setup(
     name='niq',
-    version='1.0.0',
+    version='1.1.0',
     description="Nick's library of extraneous utils",
     url='https://github.com/Cinnamon/niq',
     author='kimegitee',
