@@ -34,3 +34,14 @@ def test_caching_unbound_method(d):
         def f(_):
             return now()
     assert C().f() == C().f()
+
+def test_same_method_different_class(d):
+    class A:
+        @cache(cache_dir=d)
+        def f(_):
+            return 'A'
+    class B:
+        @cache(cache_dir=d)
+        def f(_):
+            return 'B'
+    assert A().f() != B().f()

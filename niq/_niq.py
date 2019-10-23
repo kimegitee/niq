@@ -47,7 +47,7 @@ def cache(func=None, cache_dir=Path.home() / '.niq'):
     def print_status(status, func, args, kwargs):
         logging.info(
             f'{status}\n'
-            f'func   :: {func.__name__}\n'
+            f'func   :: {func.__qualname__}\n'
             f'args   :: \n'
             f'{args}\n'
             f'kwargs :: \n'
@@ -60,7 +60,7 @@ def cache(func=None, cache_dir=Path.home() / '.niq'):
         if os.environ.get('NIQ_CACHE', '0') == '1':
             func_id = identify_func(func, args, kwargs)
             cache_path = os.path.join(cache_dir, func_id)
-            if os.path.exists(cache_path) and not func.__name__ in os.environ:
+            if os.path.exists(cache_path) and not func.__qualname__ in os.environ:
                 print_status('Using cached result', func, args, kwargs)
                 return joblib.load(open(cache_path, 'rb'))
             else:
@@ -88,7 +88,7 @@ def howlong(func):
         result = func(*args, **kwargs)
         stop_time = time()
         timed_func.last_run = stop_time - start_time
-        print(f'Calling {func.__name__} took {timed_func.last_run}')
+        print(f'Calling {func.__qualname__} took {timed_func.last_run}')
         return result
 
     return timed_func
@@ -101,4 +101,4 @@ def identify_func(func, args, kwargs):
     # Quick hack for unbound method case
     if args and (inspect.ismethod(func) or getattr(args[0], func.__name__, None)):
         args = args[1:]
-    return identify((func.__name__, args, kwargs))
+    return identify((func.__qualname__, args, kwargs))
