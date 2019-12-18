@@ -45,7 +45,7 @@ def cache(func=None, cache_dir=Path.home() / '.niq'):
         return partial(cache, cache_dir=cache_dir)
 
     def print_status(status, func, args, kwargs):
-        logging.info(
+        logging.debug(
             f'{status}\n'
             f'func   :: {func.__qualname__}\n'
             f'args   :: \n'
