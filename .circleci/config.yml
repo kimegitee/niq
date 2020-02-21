@@ -1,0 +1,27 @@
+version: 2.1
+
+orbs:
+  python: circleci/python@0.2.1
+
+jobs:
+  build-and-test:
+    executor: python/default
+    steps:
+      - checkout
+      - restore_cache:
+          key: v1-{{ checksum "setup.py" }}
+      - run: 
+          name: Install dependencies
+          command: pip install . pytest
+      - save_cache:
+          key: v1-{{ checksum "setup.py" }}
+          paths:
+            - "~/.cache/pip"
+      - run: 
+          name: Test
+          command: pytest
+
+workflows:
+  main:
+    jobs:
+      - build-and-test
