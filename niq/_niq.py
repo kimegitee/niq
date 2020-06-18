@@ -1,6 +1,7 @@
 import os
 import sys
 import json
+import types
 import shutil
 import pickle
 import joblib
@@ -12,67 +13,39 @@ from time import time
 from pathlib import Path
 from functools import partial, wraps
 
+CACHE_DIR = Path.home()/'.niq'
 
-def sort_file_names(src_dir):
-    dst_dir = src_dir.strip('/') + '_sorted'
-    if not os.path.exists(dst_dir):
-        os.makedirs(dst_dir)
-    src_to_dst_dict = {}
-    for src_path in glob(os.path.join(src_dir, '*')):
-        if os.path.isfile(src_path):
-            dst_path = os.path.basename(src_path)
-            dst_path = ''.join(c for c in dst_path if c.isnumeric())
-            if dst_path:
-                src_to_dst_dict[src_path] = dst_path
-    pad_length = max(len(path) for path in src_to_dst_dict.values())
-    for src_path, dst_path in src_to_dst_dict.items():
-        _, ext = os.path.splitext(src_path)
-        dst_path = f'{int(dst_path):0{pad_length}d}{ext}'
-        dst_path = os.path.join(dst_dir, dst_path)
-        src_to_dst_dict[src_path] = dst_path
-        shutil.copy(src_path, dst_path)
-    src_to_dst_dict = {
-        os.path.basename(k): os.path.basename(v) for k, v in src_to_dst_dict.items()
-    }
-    json_path = src_dir.strip('/') + '_map.json'
-    json.dump(src_to_dst_dict, open(json_path, 'w'), indent=4, sort_keys=True)
+def load_cache(cache_path):
+    if os.path.exists(cache_path):
+        return joblib.load(open(cache_path, 'rb'))
+    return None
 
+def save_cache(cache_path, result):
+    cache_dir = os.path.dirname(cache_path)
+    if not os.path.exists(cache_dir):
+        os.mkdir(cache_dir)
+    joblib.dump(result, open(cache_path, 'wb'))
 
-def cache(func=None, cache_dir=Path.home() / '.niq'):
+def cache(func=None, cache_dir=CACHE_DIR):
     '''Cache result of function call on disk
     Support multiple positional and keyword arguments'''
     if func is None:
         return partial(cache, cache_dir=cache_dir)
 
-    def print_status(status, func, args, kwargs):
-        logging.debug(
-            f'{status}\n'
-            f'func   :: {func.__qualname__}\n'
-            f'args   :: \n'
-            f'{args}\n'
-            f'kwargs :: \n'
-            f'{kwargs}'
-        )
-
 
     @wraps(func)
     def memoized_func(*args, **kwargs):
-        if os.environ.get('NIQ_CACHE', '0') == '1':
-            func_id = identify_func(func, args, kwargs)
-            cache_path = os.path.join(cache_dir, func_id)
-            if os.path.exists(cache_path) and not func.__qualname__ in os.environ:
-                print_status('Using cached result', func, args, kwargs)
-                return joblib.load(open(cache_path, 'rb'))
-            else:
-                print_status('Updating cache with fresh run', func, args, kwargs)
+        func_id = identify_func(func, args, kwargs)
+        use_cache = os.environ.get('NIQ_CACHE', '0') == '1'
+        cache_path = os.path.join(cache_dir, func_id)
+        if use_cache:
+            result = load_cache(cache_path)
+            if result is None:
                 result = func(*args, **kwargs)
-                if not os.path.exists(cache_dir):
-                    os.mkdir(cache_dir)
-                joblib.dump(result, open(cache_path, 'wb'))
-                return result
+                save_cache(cache_path, result)
         else:
-            print_status('Not using or updating cache ', func, args, kwargs)
-            return func(*args, **kwargs)
+            result = func(*args, **kwargs)
+        return result
 
     return memoized_func
 
@@ -98,7 +71,6 @@ def identify(x):
     return xxhash.xxh64(pickle.dumps(x), seed=0).hexdigest()
 
 def identify_func(func, args, kwargs):
-    # Quick hack for unbound method case
-    if args and (inspect.ismethod(func) or getattr(args[0], func.__name__, None)):
-        args = args[1:]
+    if '.' in func.__qualname__ and not inspect.ismethod(func):
+       args = args[1:]
     return identify((func.__qualname__, args, kwargs))
