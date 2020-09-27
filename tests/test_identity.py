@@ -53,6 +53,11 @@ def test_unbound_method_cache_should_miss(d):
     c = C()
     assert c.f(1) != c.f(2)
 
+def test_ignored_function_should_miss(d):
+    f = cache(cache_dir=d)(now)
+    os.environ['NIQ_REFRESH'] = 'now'
+    assert f() != f()
+
 @pytest.mark.xfail
 def test_different_instance(d):
     class C:

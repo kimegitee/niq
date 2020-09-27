@@ -16,9 +16,10 @@ from functools import partial, wraps
 CACHE_DIR = Path.home()/'.niq'
 
 def load_cache(cache_path):
-    if os.path.exists(cache_path):
+    try:
         return joblib.load(open(cache_path, 'rb'))
-    return None
+    except:
+        return None
 
 def save_cache(cache_path, result):
     cache_dir = os.path.dirname(cache_path)
@@ -37,9 +38,13 @@ def cache(func=None, cache_dir=CACHE_DIR):
     def memoized_func(*args, **kwargs):
         func_id = identify_func(func, args, kwargs)
         use_cache = os.environ.get('NIQ_CACHE', '0') == '1'
+        refresh_list = os.environ.get('NIQ_REFRESH', '').split(',')
         cache_path = os.path.join(cache_dir, func_id)
         if use_cache:
-            result = load_cache(cache_path)
+            if func.__qualname__ in refresh_list:
+                result = None
+            else:
+                result = load_cache(cache_path)
             if result is None:
                 result = func(*args, **kwargs)
                 save_cache(cache_path, result)
