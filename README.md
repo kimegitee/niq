@@ -7,7 +7,7 @@ Available utilities:
 
 ## Installation
 ```bash
-pip install 'niq@git+ssh://git@github.com/Cinnamon/niq.git@master'
+pip install 'niq@git+ssh://git@github.com/kimegitee/niq.git@master'
 ```
 ## Usage
 

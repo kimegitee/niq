@@ -1,10 +1,11 @@
+import setuptools
 from setuptools import setup
 
 setup(
     name='niq',
     version='1.2.2',
     description="Nick's library of extraneous utils",
-    url='https://github.com/Cinnamon/niq',
+    url='https://github.com/kimegitee/niq',
     author='kimegitee',
     author_email='kimegitee@gmail.com',
     license='MIT',
