@@ -16,6 +16,5 @@ setup(
     license='MIT',
     packages=setuptools.find_packages(),
     install_requires=['xxhash>=1.4.0,<2', 'joblib>=0.14.0,<0.15'],
-    scripts=['bin/niq'],
     zip_safe=False,
 )
