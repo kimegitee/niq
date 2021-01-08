@@ -1,4 +1,4 @@
-[![Cinnamon](https://circleci.com/gh/Cinnamon/niq.svg?style=shield&circle-token=a45c432116f07b0dba9165f22f1707a288c4618a)](https://circleci.com/gh/Cinnamon/niq)
+[![kimegitee](https://circleci.com/gh/kimegitee/niq.svg?style=shield)](https://circleci.com/gh/kimegitee/niq)
 
 # niq
 
