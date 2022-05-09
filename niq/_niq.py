@@ -8,10 +8,13 @@ import joblib
 import xxhash
 import inspect
 import logging
+import difflib
+import unicodedata
 from glob import glob
 from time import time
 from pathlib import Path
 from functools import partial, wraps
+from itertools import zip_longest
 
 CACHE_DIR = Path.home()/'.niq'
 
@@ -79,3 +82,20 @@ def identify_func(func, args, kwargs):
     if '.' in func.__qualname__ and not inspect.ismethod(func):
        args = args[1:]
     return identify((func.__qualname__, args, kwargs))
+
+def diff(a, b):
+    '''Wraps difflib.ndiff but handles CJK full-width character alignment'''
+    lines = []
+    prev = ''
+    for row in difflib.ndiff(a, b):
+        new = ''
+        for (x, y) in zip_longest(prev, row):
+            if y == '\n':
+                new += y
+                break
+            if row.startswith('?') and unicodedata.east_asian_width(x) == 'W':
+                y = '\u3000'
+            new += y if y is not None else ''
+        lines.append(new)
+        prev = row
+    return lines
