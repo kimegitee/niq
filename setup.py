@@ -15,6 +15,6 @@ setup(
     author_email='kimegitee@gmail.com',
     license='MIT',
     packages=setuptools.find_packages(),
-    install_requires=['xxhash>=1.4.0,<2', 'joblib>=0.14.0,<0.15'],
+    install_requires=['xxhash>=1.4.0,<2', 'joblib>=0.14.0,<0.15', 'colorama<1'],
     zip_safe=False,
 )

@@ -9,6 +9,7 @@ import xxhash
 import inspect
 import logging
 import difflib
+import colorama
 import unicodedata
 from glob import glob
 from time import time
@@ -86,16 +87,50 @@ def identify_func(func, args, kwargs):
 def diff(a, b):
     '''Wraps difflib.ndiff but handles CJK full-width character alignment'''
     lines = []
-    prev = ''
+	d = difflib.ndiff(a, b)
+    prev = next(d)
     for row in difflib.ndiff(a, b):
         new = ''
         for (x, y) in zip_longest(prev, row):
-            if y == '\n':
-                new += y
-                break
-            if row.startswith('?') and unicodedata.east_asian_width(x) == 'W':
-                y = '\u3000'
+            if row.startswith('?'):
+                if y == '\n':
+                    break
+                if y == '^':
+                    y = '*'
+                if unicodedata.east_asian_width(x) == 'W':
+                    if y == '-':
+                        y = '\uFF0D'
+                    elif y == '*':
+                        y = '\uFF0A'
+                    elif y == '+':
+                        y = '\uFF0B'
+                    elif y == ' ':
+                        y = '\u3000'
             new += y if y is not None else ''
-        lines.append(new)
+        if not new.startswith('  '):
+            lines.append(new)
+        prev = row
+    return lines
+
+def diff_color(a, b):
+    '''diff with terminal color'''
+    lines = []
+    d = difflib.ndiff(a, b)
+    prev = next(d)
+    for row in d:
+        new = ''
+        for (x, y) in zip_longest(prev, row):
+            if row.startswith('?'):
+                if y == '^':
+                    x = Fore.YELLOW + x + Fore.RESET
+                elif y == '-':
+                    x = Fore.RED + x + Fore.RESET
+                elif y == '+':
+                    x = Fore.GREEN + x + Fore.RESET
+                else:
+                    pass
+            new += x if x is not None else ''
+        if new.startswith('-') or new.startswith('+'):
+            lines.append(new)
         prev = row
     return lines
